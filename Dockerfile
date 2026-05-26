@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1.7
-
 FROM rust:1-alpine3.20 AS builder
 
 RUN apk add --no-cache \
@@ -16,9 +14,7 @@ WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,target=/app/target \
-    cargo build --release && \
+RUN cargo build --release && \
     cp target/release/rustyaestheticbot /usr/local/bin/rustyaestheticbot
 
 FROM alpine:3.20 AS runtime
