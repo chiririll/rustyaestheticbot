@@ -1,0 +1,15 @@
+target
+.git
+.gitignore
+.gitattributes
+.vscode
+.cursor
+.env
+*.env
+!example.env
+**/*.rs.bk
+*.pdb
+Dockerfile
+.dockerignore
+README.md
+LICENSE
