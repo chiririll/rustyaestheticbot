@@ -1,8 +1,13 @@
-use rand::Rng;
-use std::{env, sync::Arc};
-use teloxide::{
-    prelude::*,
-    types::{FileId, InputFile},
+mod handlers;
+mod sticker_picker;
+
+use std::env;
+
+use teloxide::{prelude::*, types::Update};
+
+use crate::{
+    handlers::{handle_inline_query, handle_message},
+    sticker_picker::StickerPicker,
 };
 
 #[tokio::main]
@@ -12,37 +17,30 @@ async fn main() {
 
     let sticker_set_name = env::var("STICKER_SET_NAME").expect("STICKER_SET_NAME must be set");
     let bot_token = env::var("BOT_TOKEN").expect("BOT_TOKEN must be set");
-    
+
     let bot = Bot::new(bot_token);
     let sticker_set = bot
         .get_sticker_set(sticker_set_name)
         .await
         .expect("Failed to fetch sticker set");
 
-    let stickers: Arc<Vec<FileId>> = Arc::new(
+    let picker = StickerPicker::new(
         sticker_set
             .stickers
             .into_iter()
             .map(|sticker| sticker.file.id)
             .collect(),
     );
+    log::info!("Loaded {} stickers", picker.len());
 
-    assert!(
-        !stickers.is_empty(),
-        "Sticker set is empty: check STICKER_SET_NAME"
-    );
+    let handler = dptree::entry()
+        .branch(Update::filter_message().endpoint(handle_message))
+        .branch(Update::filter_inline_query().endpoint(handle_inline_query));
 
-    log::info!("Loaded {} stickers", stickers.len());
-
-    teloxide::repl(bot, move |bot: Bot, msg: Message| {
-        let stickers = Arc::clone(&stickers);
-        async move {
-            let idx = rand::rng().random_range(0..stickers.len());
-            let file_id = stickers[idx].clone();
-            bot.send_sticker(msg.chat.id, InputFile::file_id(file_id))
-                .await?;
-            Ok(())
-        }
-    })
-    .await;
+    Dispatcher::builder(bot, handler)
+        .dependencies(dptree::deps![picker])
+        .enable_ctrlc_handler()
+        .build()
+        .dispatch()
+        .await;
 }

@@ -5,22 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Debug executable 'rustyaestheticbot'",
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'rustyaestheticbot'",
             "cargo": {
                 "args": [
-                    "build",
-                    "--bin=rustyaestheticbot",
-                    "--package=rustyaestheticbot"
-                ],
-                "filter": {
-                    "name": "rustyaestheticbot",
-                    "kind": "bin"
-                }
+                    "run",
+                    "--bin=rustyaestheticbot"
+                ]
             },
             "args": [],
-            "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env"
         }
     ]
